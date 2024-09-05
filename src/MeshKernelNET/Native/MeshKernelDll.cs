@@ -133,6 +133,18 @@ namespace MeshKernelNET.Native
                                                                                [In] ref SplinesToCurvilinearParametersNative splinesToCurvilinearParametersNative);
 
         /// <summary>
+        /// Make curvilinear grid from splines with an advancing front.
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state</param>
+        /// <param name="geometryListNative">The input splines</param>
+        /// <param name="curvilinearParametersNative">The input parameters to generate the curvilinear grid</param>
+        /// <returns>Error code</returns>
+        [DllImport(MeshKernelDllName, EntryPoint = "mkernel_curvilinear_compute_grid_from_splines", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int CurvilinearComputeFromSplines([In] int meshKernelId,
+                                                                 [In] ref GeometryListNative geometryListNative,
+                                                                 [In] ref CurvilinearParametersNative curvilinearParametersNative);
+
+        /// <summary>
         /// Computes the curvature of a curvilinear grid.
         /// </summary>
         /// <param name="meshKernelId">Id of the mesh state</param>
@@ -266,6 +278,32 @@ namespace MeshKernelNET.Native
         /// <returns>Error code</returns>
         [DllImport(MeshKernelDllName, EntryPoint = "mkernel_curvilinear_get_data", CallingConvention = CallingConvention.Cdecl)]
         internal static extern int CurvilinearGetData([In] int meshKernelId, [In][Out] ref CurvilinearGridNative curvilinearGridNative);
+
+        /// <summary>
+        ///  Counts the number of nodes in curvilinear grid boundary polygons.
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state</param>
+        /// <param name="lowerLeftN">The n index of the lower left corner</param>
+        /// <param name="lowerLeftM">The m index of the lower left corner</param>
+        /// <param name="upperRightN">The n index of the upper right corner</param>
+        /// <param name="upperRightM">The m index of the upper right corner</param>
+        /// <param name="numberOfPolygonNodes">The number of polygon nodes</param>
+        /// <returns>Error code</returns>
+        [DllImport(MeshKernelDllName, EntryPoint = "mkernel_curvilinear_count_boundaries_as_polygons", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int CurvilinearCountGetBoundariesAsPolygons([In] int meshKernelId, [In] int lowerLeftN, [In] int lowerLeftM, [In] int upperRightN, [In] int upperRightM, [In][Out] ref int numberOfPolygonNodes);
+
+        /// <summary>
+        /// Gets the boundary polygon of a curvilinear grid, nodes with invalid coordinates are excluded.
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state</param>
+        /// <param name="lowerLeftN">The n index of the lower left corner</param>
+        /// <param name="lowerLeftM">The m index of the lower left corner</param>
+        /// <param name="upperRightN">The n index of the upper right corner</param>
+        /// <param name="upperRightM">The m index of the upper right corner</param>
+        /// <param name="boundaryPolygons">The geometry list containing the boundary polygons. If multiple polygons are present, a separator is used</param>
+        /// <returns>Error code</returns>
+        [DllImport(MeshKernelDllName, EntryPoint = "mkernel_curvilinear_get_boundaries_as_polygons", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int CurvilinearGetBoundariesAsPolygons([In] int meshKernelId, [In] int lowerLeftN, [In] int lowerLeftM, [In] int upperRightN, [In] int upperRightM, [In][Out] ref GeometryListNative boundaryPolygons);
 
         /// <summary>
         /// Gets the curvilinear grid dimensions as a CurvilinearGrid struct (converted as set of edges and nodes).
@@ -631,6 +669,14 @@ namespace MeshKernelNET.Native
         internal static extern int DeallocateState([In] int meshKernelId);
 
         /// <summary>
+        /// Deallocate mesh state and remove it completely, no undo for this meshKernelId will be possible after expunging
+        /// </summary>
+        /// <param name="meshKernelId">The id of the mesh state</param>
+        /// <returns>Error code</returns>
+        [DllImport(MeshKernelDllName, EntryPoint = "mkernel_expunge_state", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int ExpungeState([In] int meshKernelId);
+
+        /// <summary>
         /// Gets an int indicating the closest point averaging method type
         /// </summary>
         /// <param name="method">The int indicating the closest point averaging method type</param>
@@ -991,6 +1037,16 @@ namespace MeshKernelNET.Native
                                                                   [In] ref OrthogonalizationParametersNative orthogonalizationParametersNative,
                                                                   [In] ref GeometryListNative geometryListNativePolygon,
                                                                   [In] ref GeometryListNative geometryListNativeLandBoundaries);
+
+        /// <summary>
+        /// Connect two disconnected regions along boundary
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state pertaining to the current domain</param>
+        /// <param name="mesh2DNative">The mesh to merge to the the current domain</param>
+        /// <param name="searchFraction">Fraction of the shortest edge (along an edge to be connected) to use when determining neighbour edge closeness</param>
+        /// <returns>Error code</returns>
+        [DllImport(MeshKernelDllName, EntryPoint = "mkernel_mesh2d_connect_meshes", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int Mesh2dConnectMeshes([In] int meshKernelId, [In] ref Mesh2DNative mesh2DNative, [In] double searchFraction);
 
         /// <summary>
         /// Converts the projection of a mesh2d
@@ -1671,6 +1727,16 @@ namespace MeshKernelNET.Native
         internal static extern int Mesh2dSet([In] int meshKernelId, [In] ref Mesh2DNative mesh2DNative);
 
         /// <summary>
+        /// Snaps a mesh to a land boundary
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state</param>
+        /// <param name="selectingPolygon">The polygon where to perform the snapping</param>
+        /// <param name="landBoundaries"> The input land boundaries</param>
+        /// <returns>Error code</returns>
+        [DllImport(MeshKernelDllName, EntryPoint = "mkernel_mesh2d_snap_to_landboundary", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int Mesh2dSnapToLandBoundary([In] int meshKernelId, [In] ref GeometryListNative selectingPolygon, [In] ref GeometryListNative landBoundaries);
+
+        /// <summary>
         /// Get the double value used in the back-end library as separator and missing value
         /// </summary>
         /// <returns>The double missing value</returns>
@@ -1770,7 +1836,19 @@ namespace MeshKernelNET.Native
         /// <param name="numberOfPolygonVertices">The number of vertices after refinement </param>
         /// <returns>Error code</returns>
         [DllImport(MeshKernelDllName, EntryPoint = "mkernel_polygon_count_refine", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int PolygonCountRefine([In] int meshKernelId, [In] ref GeometryListNative geometryListIn, [In] int firstIndex, [In] int secondIndex, [In] double distance, [In][Out] ref int numberOfPolygonVertices);
+        internal static extern int PolygonCountEquidistantRefine([In] int meshKernelId, [In] ref GeometryListNative geometryListIn, [In] int firstIndex, [In] int secondIndex, [In] double distance, [In][Out] ref int numberOfPolygonVertices);
+
+        /// <summary>
+        /// Count the number of vertices after linear refinement of a polygon
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state</param>
+        /// <param name="geometryListIn">The input polygon</param>
+        /// <param name="firstIndex">The index of the first vertex</param>
+        /// <param name="secondIndex">The index of the second vertex</param>
+        /// <param name="numberOfPolygonVertices">The number of vertices after refinement </param>
+        /// <returns>Error code</returns>
+        [DllImport(MeshKernelDllName, EntryPoint = "mkernel_polygon_count_linear_refine", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int PolygonCountLinearRefine([In] int meshKernelId, [In] ref GeometryListNative geometryListIn, [In] int firstIndex, [In] int secondIndex, [In][Out] ref int numberOfPolygonVertices);
 
         /// <summary>
         /// Selects points in polygons
@@ -1796,7 +1874,7 @@ namespace MeshKernelNET.Native
         internal static extern int PolygonGetOffset([In] int meshKernelId, [In] ref GeometryListNative geometryListIn, [In] int innerPolygon, [In] double distance, [In][Out] ref GeometryListNative geometryListOut);
 
         /// <summary>
-        /// Gets the refined polygon
+        /// Equidistant refinement of a polygon
         /// </summary>
         /// <param name="meshKernelId">Id of the mesh state</param>
         /// <param name="geometryListIn">The input polygons</param>
@@ -1806,22 +1884,59 @@ namespace MeshKernelNET.Native
         /// <param name="geometryListOut"></param>
         /// <returns>Error code</returns>
         [DllImport(MeshKernelDllName, EntryPoint = "mkernel_polygon_refine", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int PolygonRefine([In] int meshKernelId, [In] ref GeometryListNative geometryListIn, [In] int firstIndex, [In] int secondIndex, [In] double distance, [In][Out] ref GeometryListNative geometryListOut);
+        internal static extern int PolygonEquidistantRefine([In] int meshKernelId, [In] ref GeometryListNative geometryListIn, [In] int firstIndex, [In] int secondIndex, [In] double distance, [In][Out] ref GeometryListNative geometryListOut);
+
+        /// <summary>
+        /// Linear refinement of a polygon
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state</param>
+        /// <param name="geometryListIn">The input polygons</param>
+        /// <param name="firstIndex">The index of the first vertex</param>
+        /// <param name="secondIndex">The index of the second vertex</param>
+        /// <param name="geometryListOut"></param>
+        /// <returns>Error code</returns>
+        [DllImport(MeshKernelDllName, EntryPoint = "mkernel_polygon_linear_refine", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int PolygonLinearRefine([In] int meshKernelId, [In] ref GeometryListNative geometryListIn, [In] int firstIndex, [In] int secondIndex, [In][Out] ref GeometryListNative geometryListOut);
+
+        /// <summary>
+        /// Snaps part of a polygon to a land boundary
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state</param
+        /// <param name="landboundaries">The land boundaries</param>
+        /// <param name="polygon">The input polygon</param>
+        /// <param name="firstIndex">The index of the first vertex</param>
+        /// <param name="secondIndex">The index of the second vertex</param>
+        /// <returns>Error code</returns>
+        [DllImport(MeshKernelDllName, EntryPoint = "mkernel_polygon_snap_to_landboundary", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int PolygonSnapToLandBoundary([In] int meshKernelId,
+                                                             [In] ref GeometryListNative landboundaries,
+                                                             [In][Out] ref GeometryListNative polygon,
+                                                             [In] int firstIndex,
+                                                             [In] int secondIndex);
 
         /// <summary>
         /// Redo editing action
         /// </summary>
         /// <param name="redone">If the editing action has been re-done</param>
+        /// <param name="meshKernelId">The mesh kernel id related to the redo action</param>
         /// <returns>Error code</returns>
         [DllImport(MeshKernelDllName, EntryPoint = "mkernel_redo_state", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int RedoState([In][Out] ref bool redone);
+        internal static extern int RedoState([In][Out] ref bool redone, [In] ref int meshKernelId);
+
+        /// <summary>
+        /// Clear all internal mesh kernel state and undo actions, no undo will be possible after this
+        /// </summary>
+        /// <returns>Error code</returns>
+        [DllImport(MeshKernelDllName, EntryPoint = "mkernel_clear_state", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern int ClearState();
 
         /// <summary>
         /// Redo editing action
         /// </summary>
         /// <param name="undone">If the editing action has been un-done</param>
+        /// <param name="meshKernelId">The mesh kernel id related to the undo action</param>
         /// <returns>Error code</returns>
         [DllImport(MeshKernelDllName, EntryPoint = "mkernel_undo_state", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern int UndoState([In][Out] ref bool undone);
+        internal static extern int UndoState([In][Out] ref bool undone, [In] ref int meshKernelId);
     }
 }

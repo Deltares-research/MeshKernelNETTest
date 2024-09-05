@@ -87,6 +87,15 @@ namespace MeshKernelNET.Api
         int ContactsGetData(int meshKernelId, out DisposableContacts disposableContacts);
 
         /// <summary>
+        /// Snaps a mesh to a land boundary
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state</param>
+        /// <param name="selectingPolygon">The polygon where to perform the snapping</param>
+        /// <param name="landBoundaries"> The input land boundaries</param>
+        /// <returns>Error code</returns>
+        int Mesh2dSnapToLandBoundary(int meshKernelId, in DisposableGeometryList selectingPolygon, in DisposableGeometryList landBoundaries);
+
+        /// <summary>
         /// Make curvilinear grid from splines
         /// </summary>
         /// <param name="meshKernelId">Id of the grid state</param>
@@ -118,6 +127,17 @@ namespace MeshKernelNET.Api
                                                         in DisposableGeometryList disposableGeometryListIn,
                                                         in CurvilinearParameters curvilinearParameters,
                                                         in SplinesToCurvilinearParameters splinesToCurvilinearParameters);
+
+        /// <summary>
+        /// Make curvilinear grid from splines.
+        /// </summary>
+        /// <param name="meshKernelId">Id of the grid state</param>
+        /// <param name="disposableGeometryListIn">The input splines</param>
+        /// <param name="curvilinearParameters">The parameters for the generation of the curvilinear grid</param>
+        /// <returns>Error code</returns>
+        int CurvilinearComputeGridFromSplines(int meshKernelId,
+                                              in DisposableGeometryList disposableGeometryListIn,
+                                              in CurvilinearParameters curvilinearParameters);
 
         /// <summary>
         /// Computes the smoothness of a curvilinear grid.
@@ -209,6 +229,18 @@ namespace MeshKernelNET.Api
         /// The disposable curvilinear grid</returns>
         /// <returns>Error code</returns>
         int CurvilinearGridGetData(int meshKernelId, out DisposableCurvilinearGrid disposableCurvilinearGrid);
+
+        /// <summary>
+        /// Gets the boundary polygon of a curvilinear grid, nodes with invalid coordinates are excluded
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state</param>
+        /// <param name="lowerLeftN">The n index of the lower left corner</param>
+        /// <param name="lowerLeftM">The m index of the lower left corner</param>
+        /// <param name="upperRightN">The n index of the upper right corner</param>
+        /// <param name="upperRightM">The m index of the upper right corner</param>
+        /// <param name="boundaryPolygons">The geometry list containing the boundary polygons. If multiple polygons are present, a separator is used</param>
+        /// <returns>Error code</returns>
+        int CurvilinearGetBoundariesAsPolygons(int meshKernelId, int lowerLeftN, int lowerLeftM, int upperRightN, int upperRightM, out DisposableGeometryList boundaryPolygons);
 
         /// <summary>
         /// Gets the index of the closest curvilinear edge
@@ -562,6 +594,13 @@ namespace MeshKernelNET.Api
         int DeallocateState(int meshKernelId);
 
         /// <summary>
+        /// Deallocate grid state (collections of mesh arrays with auxiliary variables)
+        /// </summary>
+        /// <param name="meshKernelId">Id of the grid state</param>
+        /// <returns>Error code</returns>
+        int ExpungeState(int meshKernelId);
+
+        /// <summary>
         /// Gets an int indicating the closest point averaging method type
         /// </summary>
         /// <param name="method">The int indicating the closest point averaging method type</param>
@@ -866,6 +905,16 @@ namespace MeshKernelNET.Api
                                            OrthogonalizationParameters orthogonalizationParameters,
                                            in DisposableGeometryList geometryListPolygon,
                                            in DisposableGeometryList geometryListLandBoundaries);
+
+
+        /// <summary>
+        /// Connect two disconnected regions along boundary
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state pertaining to the current domain</param>
+        /// <param name="disposableMesh2D">The mesh to merge to the the current domain</param>
+        /// <param name="searchFraction">Fraction of the shortest edge (along an edge to be connected) to use when determining neighbour edge closeness</param>
+        /// <returns>Error code</returns>
+        int Mesh2dConnectMeshes([In] int meshKernelId, in DisposableMesh2D disposableMesh2D, double searchFraction);
 
         /// <summary>
         /// Converts the projection of a mesh2d
@@ -1518,7 +1567,7 @@ namespace MeshKernelNET.Api
                                bool innerPolygon, double distance, ref int numberOfPolygonVertices);
 
         /// <summary>
-        /// Count the number of polygon vertices after refinement
+        /// Count the number of polygon vertices after equidistant refinement
         /// </summary>
         /// <param name="meshKernelId">Id of the grid state</param>
         /// <param name="disposableGeometryListIn">The input polygon</param>
@@ -1527,12 +1576,28 @@ namespace MeshKernelNET.Api
         /// <param name="distance">The refinement distance</param>
         /// <param name="numberOfPolygonVertices">The number of vertices after refinement </param>
         /// <returns>Error code</returns>
-        int PolygonCountRefine(int meshKernelId,
+        int PolygonCountEquidistantRefine(int meshKernelId,
                                in DisposableGeometryList disposableGeometryListIn,
                                int firstIndex,
                                int secondIndex,
                                double distance,
                                ref int numberOfPolygonVertices);
+
+        /// <summary>
+        /// Count the number of polygon vertices after linear refinement
+        /// </summary>
+        /// <param name="meshKernelId">Id of the grid state</param>
+        /// <param name="disposableGeometryListIn">The input polygon</param>
+        /// <param name="firstIndex">The index of the first vertex</param>
+        /// <param name="secondIndex">The index of the second vertex</param>
+        /// <param name="distance">The refinement distance</param>
+        /// <param name="numberOfPolygonVertices">The number of vertices after refinement </param>
+        /// <returns>Error code</returns>
+        int PolygonCountLinearRefine(int meshKernelId,
+                                      in DisposableGeometryList disposableGeometryListIn,
+                                      int firstIndex,
+                                      int secondIndex,
+                                      ref int numberOfPolygonVertices);
 
         /// <summary>
         /// Selects points in polygons
@@ -1562,7 +1627,7 @@ namespace MeshKernelNET.Api
                              double distance, ref DisposableGeometryList disposableGeometryListOut);
 
         /// <summary>
-        /// Gets the refined polygon
+        /// Equidistant refinement of a polygon.
         /// </summary>
         /// <param name="meshKernelId">Id of the grid state</param>
         /// <param name="disposableGeometryListIn">The input polygon</param>
@@ -1571,21 +1636,59 @@ namespace MeshKernelNET.Api
         /// <param name="distance">The refinement distance</param>
         /// <param name="disposableGeometryListOut">The refined polygon</param>
         /// <returns>Error code</returns>
-        int PolygonRefine(int meshKernelId, in DisposableGeometryList disposableGeometryListIn, int firstIndex,
+        int PolygonEquidistantRefine(int meshKernelId, in DisposableGeometryList disposableGeometryListIn, int firstIndex,
                           int secondIndex, double distance, ref DisposableGeometryList disposableGeometryListOut);
+
+        /// <summary>
+        /// Linear refinement of a polygon
+        /// </summary>
+        /// <param name="meshKernelId">Id of the grid state</param>
+        /// <param name="disposableGeometryListIn">The input polygon</param>
+        /// <param name="firstIndex">The index of the first vertex</param>
+        /// <param name="secondIndex">The index of the second vertex</param>
+        /// <param name="disposableGeometryListOut">The refined polygon</param>
+        /// <returns>Error code</returns>
+        int PolygonLinearRefine(int meshKernelId, 
+                                in DisposableGeometryList disposableGeometryListIn, 
+                                int firstIndex,
+                                int secondIndex, 
+                                ref DisposableGeometryList disposableGeometryListOut);
+
+        /// <summary>
+        /// Snaps part of a polygon to a land boundary
+        /// </summary>
+        /// <param name="meshKernelId">Id of the mesh state</param
+        /// <param name="landboundaries">The land boundaries</param>
+        /// <param name="polygon">The input polygon</param>
+        /// <param name="firstIndex">The index of the first vertex</param>
+        /// <param name="secondIndex">The index of the second vertex</param>
+        /// <returns>Error code</returns>
+        int PolygonSnapToLandBoundary(int meshKernelId,
+                                      in DisposableGeometryList landboundaries,
+                                      ref DisposableGeometryList polygon,
+                                      int firstIndex,
+                                      int secondIndex);
 
         /// <summary>
         /// Redo editing action
         /// </summary>
         /// <param name="redone">If the editing action has been re-done</param>
+        /// <param name="meshKernelId">The mesh kernel id related to the redo action</param>
         /// <returns>Error code</returns>
-        int RedoState(ref bool redone);
+        int RedoState(ref bool redone, ref int meshKernelId);
+
+        /// <summary>
+        /// Clear all internal mesh kernel state and undo actions, no undo will be possible after this
+        /// </summary>
+        /// <returns>Error code</returns>
+        int ClearState();
 
         /// <summary>
         /// Undo editing action
         /// </summary>
         /// <param name="undone">If the editing action has been un-done</param>
+        /// <param name="meshKernelId">The mesh kernel id related to the undo action</param>
         /// <returns>Error code</returns>
-        int UndoState(ref bool undone);
+        int UndoState(ref bool undone, ref int meshKernelId);
     }
 }

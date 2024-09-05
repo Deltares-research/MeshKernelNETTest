@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Xml.Linq;
 using MeshKernelNET.Api;
-using NetTopologySuite.Geometries;
 using NUnit.Framework;
 using static MeshKernelNETTest.Api.TestUtilityFunctions;
 
@@ -54,7 +52,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2d.Dispose();
                 }
             }
@@ -103,7 +101,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -152,7 +150,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -213,7 +211,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -261,7 +259,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -312,7 +310,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -363,7 +361,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -413,7 +411,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -474,7 +472,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -509,7 +507,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -545,7 +543,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -583,7 +581,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     disposableGeometryListOut.Dispose();
                 }
             }
@@ -617,7 +615,7 @@ namespace MeshKernelNETTest.Api
                     var firstIndex = 0;
                     var secondIndex = 2;
                     int numberOfPolygonVertices = -1;
-                    Assert.AreEqual(0, api.PolygonCountRefine(id,
+                    Assert.AreEqual(0, api.PolygonCountEquidistantRefine(id,
                                                               geometryListIn,
                                                               firstIndex,
                                                               secondIndex,
@@ -631,7 +629,7 @@ namespace MeshKernelNETTest.Api
                     geometryListOut.YCoordinates = new double[numberOfPolygonVertices];
                     geometryListOut.Values = new double[numberOfPolygonVertices];
 
-                    Assert.AreEqual(0, api.PolygonRefine(id,
+                    Assert.AreEqual(0, api.PolygonEquidistantRefine(id,
                                                          geometryListIn,
                                                          firstIndex,
                                                          secondIndex,
@@ -642,9 +640,153 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     geometryListOut.Dispose();
                     mesh2D.Dispose();
+                }
+            }
+        }
+
+        [Test]
+        public void PolygonLinearRefineThroughAPI()
+        {
+            // Setup
+            using (var api = new MeshKernelApi())
+            using (var geometryListIn = new DisposableGeometryList())
+            {
+                var id = 0;
+                var geometryListOut = new DisposableGeometryList();
+                try
+                {
+                    id = api.AllocateState(0);
+
+                    double geometrySeparator = api.GetSeparator();
+                    geometryListIn.GeometrySeparator = geometrySeparator;
+                    geometryListIn.NumberOfCoordinates = 4;
+
+                    geometryListIn.XCoordinates = new[] { 76.251099, 498.503723, 505.253784, 76.251099 };
+
+                    geometryListIn.YCoordinates = new[] { 92.626556, 91.126541, 490.130554, 92.626556 };
+
+                    geometryListIn.Values = new[] { 0.0, 0.0, 0.0, 0.0 };
+
+                    var firstIndex = 0;
+                    var secondIndex = 2;
+                    int numberOfPolygonVertices = -1;
+                    var result = api.PolygonCountLinearRefine(id,
+                                                       geometryListIn,
+                                                       firstIndex,
+                                                       secondIndex,
+                                                       ref numberOfPolygonVertices);
+                    Assert.That(result, Is.EqualTo(0));
+
+                    geometryListOut.GeometrySeparator = geometrySeparator;
+                    geometryListOut.NumberOfCoordinates = numberOfPolygonVertices;
+
+                    geometryListOut.XCoordinates = new double[numberOfPolygonVertices];
+                    geometryListOut.YCoordinates = new double[numberOfPolygonVertices];
+                    geometryListOut.Values = new double[numberOfPolygonVertices];
+
+                    result = api.PolygonLinearRefine(id,
+                                                     geometryListIn,
+                                                     firstIndex,
+                                                     secondIndex,
+                                                     ref geometryListOut);
+
+                    Assert.That(result, Is.EqualTo(0));
+
+                }
+                finally
+                {
+                    api.ClearState();
+                    geometryListOut.Dispose();
+                }
+            }
+        }
+
+        [Test]
+        public void PolygonSnapToLandBoundaryThroughAPI()
+        {
+            // Setup
+            using (var api = new MeshKernelApi())
+            using (DisposableMesh2D mesh = CreateMesh2D(11, 11, 100, 100))
+            using (var landboundaries = new DisposableGeometryList())
+            {
+                var id = 0;
+                var polygon = new DisposableGeometryList();
+                try
+                {
+                    id = api.AllocateState(0);
+
+                    double geometrySeparator = api.GetSeparator();
+                    landboundaries.GeometrySeparator = geometrySeparator;
+                    landboundaries.NumberOfCoordinates = 4;
+                    landboundaries.XCoordinates = new[] { 139.251465, 527.753906, 580.254211, 194.001801 };
+                    landboundaries.YCoordinates = new[] { 497.630615, 499.880676, 265.878296, 212.627762 };
+                    landboundaries.NumberOfCoordinates = landboundaries.XCoordinates.Length;
+
+                    polygon.XCoordinates = new[] { 170.001648, 263.002228, 344.002747,
+                        458.753448, 515.753845, 524.753906,
+                        510.503754, 557.754089, 545.004028,
+                        446.003387, 340.252716, 242.752106,
+                        170.001648 };
+                    polygon.YCoordinates = new[] { 472.880371, 472.880371, 475.130432,
+                        482.630493, 487.130554, 434.630005,
+                        367.129333, 297.378601, 270.378357,
+                        259.128235, 244.128067, 226.877884,
+                        472.880371 };
+                    polygon.NumberOfCoordinates = polygon.XCoordinates.Length;
+
+
+                    var firstIndex = 0;
+                    var secondIndex = 2;
+                    int numberOfPolygonVertices = -1;
+                    var result = api.PolygonSnapToLandBoundary(id,
+                                                               landboundaries,
+                                                               ref polygon,
+                                                               firstIndex,
+                                                               secondIndex);
+                    Assert.That(result, Is.EqualTo(0));
+
+
+                    const double tolerance = 1.0e-3;
+                    var expectedXCoordinates = new[] { 169.85727722422831,
+                        262.854737816309,
+                        343.86557098779792,
+                        458.753448,
+                        515.753845,
+                        524.753906,
+                        510.503754,
+                        557.754089,
+                        545.004028,
+                        446.003387,
+                        340.252716,
+                        242.752106,
+                        170.001648 };
+
+                    var expectedYCoordinates = new[]
+                    {   497.80787243056284,
+                        498.34647897995455,
+                        498.81566346133775,
+                        482.630493,
+                        487.130554,
+                        434.630005,
+                        367.129333,
+                        297.378601,
+                        270.378357,
+                        259.128235,
+                        244.128067,
+                        226.877884,
+                        472.880371};
+
+                    Assert.That(polygon.XCoordinates, Is.EqualTo(expectedXCoordinates).Within(tolerance));
+                    Assert.That(polygon.YCoordinates, Is.EqualTo(expectedYCoordinates).Within(tolerance));
+
+                }
+                finally
+                {
+                    api.ClearState();
+                    polygon.Dispose();
                 }
             }
         }
@@ -683,7 +825,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -725,7 +867,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -807,7 +949,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     meshInitial.Dispose();
                     meshRotated.Dispose();
                 }
@@ -881,7 +1023,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     meshInitial.Dispose();
                     meshTranslated.Dispose();
                 }
@@ -920,7 +1062,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     curvilinearGrid.Dispose();
                 }
             }
@@ -959,7 +1101,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     curvilinearGrid.Dispose();
                 }
             }
@@ -991,7 +1133,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -1022,7 +1164,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -1055,7 +1197,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -1091,7 +1233,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -1123,7 +1265,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D.Dispose();
                 }
             }
@@ -1163,7 +1305,7 @@ namespace MeshKernelNETTest.Api
                 finally
                 {
                     onedNodeMaskPinned.Free();
-                    api.DeallocateState(id);
+                    api.ClearState();
                     contacts.Dispose();
                 }
             }
@@ -1201,7 +1343,7 @@ namespace MeshKernelNETTest.Api
                 finally
                 {
                     onedNodeMaskPinned.Free();
-                    api.DeallocateState(id);
+                    api.ClearState();
                     contacts.Dispose();
                 }
             }
@@ -1247,7 +1389,7 @@ namespace MeshKernelNETTest.Api
                 finally
                 {
                     onedNodeMaskPinned.Free();
-                    api.DeallocateState(id);
+                    api.ClearState();
                     contacts.Dispose();
                 }
             }
@@ -1293,7 +1435,7 @@ namespace MeshKernelNETTest.Api
                 finally
                 {
                     onedNodeMaskPinned.Free();
-                    api.DeallocateState(id);
+                    api.ClearState();
                     contacts.Dispose();
                 }
             }
@@ -1324,7 +1466,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -1627,7 +1769,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -1708,7 +1850,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     outDisposableMesh1D.Dispose();
                     inDisposableMesh1D.Dispose();
                 }
@@ -1756,7 +1898,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     results.Dispose();
                     samples.Dispose();
                 }
@@ -1782,7 +1924,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D?.Dispose();
                 }
             }
@@ -1813,7 +1955,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D?.Dispose();
                     polygon?.Dispose();
                 }
@@ -1859,7 +2001,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     elementsToRemove?.Dispose();
                     expectedElementsToRemove?.Dispose();
                 }
@@ -1913,7 +2055,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     polygon?.Dispose();
                     elementsToRemove?.Dispose();
                     expectedElementsToRemove?.Dispose();
@@ -1940,7 +2082,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D?.Dispose();
                 }
             }
@@ -1971,7 +2113,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D?.Dispose();
                     polygon?.Dispose();
                 }
@@ -2006,10 +2148,45 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D?.Dispose();
                 }
             }
+        }
+
+        [Test]
+        public void Mesh2dConnectMeshesThroughApi()
+        {
+            // Setup
+            using (DisposableMesh2D firstMesh = CreateMesh2D(3, 3, 1, 1))
+            using (DisposableMesh2D secondMesh = CreateMesh2D(6, 6, 0.5, 0.5, 3.0))
+            using (var api = new MeshKernelApi())
+            {
+                var id = 0;
+                DisposableMesh2D mesh2D = null;
+                try
+                {
+                    // Prepare
+                    const double searchFraction = 0.1;
+                    id = api.AllocateState(0);
+                    api.Mesh2dSet(id, firstMesh);
+                    api.Mesh2dGetData(id, out mesh2D);
+
+                    // Execute
+                    var result = api.Mesh2dConnectMeshes(id, secondMesh, searchFraction);
+
+                    // Assert
+                    Assert.That(result, Is.EqualTo(0));
+                    Assert.AreEqual(0, api.Mesh2dGetData(id, out mesh2D));
+                    Assert.AreEqual(45, mesh2D.NumNodes);
+                }
+                finally
+                {
+                    api.ClearState();
+                    mesh2D?.Dispose();
+                }
+            }
+
         }
 
         [Test]
@@ -2089,7 +2266,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     meshInitial?.Dispose();
                     meshFinal.Dispose();
                 }
@@ -2143,7 +2320,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     meshInitial.Dispose();
                 }
             }
@@ -2168,7 +2345,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -2203,7 +2380,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     disposableGeometryList?.Dispose();
                 }
             }
@@ -2231,7 +2408,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D?.Dispose();
                 }
             }
@@ -2261,7 +2438,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D?.Dispose();
                 }
             }
@@ -2291,7 +2468,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     disposableGeometryList.Dispose();
                 }
             }
@@ -2347,7 +2524,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D?.Dispose();
                 }
             }
@@ -2383,7 +2560,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2d?.Dispose();
                 }
             }
@@ -2414,7 +2591,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -2450,7 +2627,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2d?.Dispose();
                 }
             }
@@ -2487,7 +2664,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D?.Dispose();
                 }
             }
@@ -2543,7 +2720,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     meshOut?.Dispose();
                     griddedSamples.Dispose();
                 }
@@ -2589,7 +2766,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2D?.Dispose();
                     results.Dispose();
                 }
@@ -2614,7 +2791,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -2771,7 +2948,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2d?.Dispose();
                 }
             }
@@ -2799,7 +2976,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2d?.Dispose();
                 }
             }
@@ -2834,36 +3011,45 @@ namespace MeshKernelNETTest.Api
 
                     // Un-do
                     bool undone = false;
-                    Assert.AreEqual(0, api.UndoState(ref undone));
+                    int meshKernelId = -1;
+                    Assert.AreEqual(0, api.UndoState(ref undone, ref meshKernelId));
                     Assert.AreEqual(true, undone);
+                    Assert.AreEqual(0, meshKernelId);
                     Assert.AreEqual(0, api.Mesh2dGetData(id, out mesh2d));
                     Assert.AreEqual(100.0, mesh2d.NodeX[6]);
                     Assert.AreEqual(numberOfVerticesBefore - 1, mesh2d.NumValidNodes);
 
-                    Assert.AreEqual(0, api.UndoState(ref undone));
+                    meshKernelId = -1;
+                    undone = false;
+                    Assert.AreEqual(0, api.UndoState(ref undone, ref meshKernelId));
                     Assert.AreEqual(true, undone);
+                    Assert.AreEqual(0, meshKernelId);
                     Assert.AreEqual(0, api.Mesh2dGetData(id, out mesh2d));
                     Assert.AreEqual(0.0, mesh2d.NodeX[0]);
                     Assert.AreEqual(numberOfVerticesBefore, mesh2d.NumValidNodes);
 
                     // Re-do
+                    meshKernelId = -1;
                     bool redone = false;
-
-                    Assert.AreEqual(0, api.RedoState(ref redone));
+                    Assert.AreEqual(0, api.RedoState(ref redone, ref meshKernelId));
                     Assert.AreEqual(true, redone);
+                    Assert.AreEqual(0, meshKernelId);
                     Assert.AreEqual(0, api.Mesh2dGetData(id, out mesh2d));
                     Assert.AreEqual(-999.0, mesh2d.NodeX[0]);
                     Assert.AreEqual(numberOfVerticesBefore - 1, mesh2d.NumValidNodes);
 
-                    Assert.AreEqual(0, api.RedoState(ref redone));
+                    meshKernelId = -1;
+                    redone = false;
+                    Assert.AreEqual(0, api.RedoState(ref redone, ref meshKernelId));
                     Assert.AreEqual(true, redone);
+                    Assert.AreEqual(0, meshKernelId);
                     Assert.AreEqual(0, api.Mesh2dGetData(id, out mesh2d));
                     Assert.AreEqual(-999.0, mesh2d.NodeX[6]);
                     Assert.AreEqual(numberOfVerticesBefore - 2, mesh2d.NumValidNodes);
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     mesh2d.Dispose();
                 }
             }
@@ -2895,7 +3081,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -2926,7 +3112,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -2958,7 +3144,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -2995,7 +3181,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -3026,7 +3212,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -3060,7 +3246,7 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                 }
             }
         }
@@ -3094,9 +3280,123 @@ namespace MeshKernelNETTest.Api
                 }
                 finally
                 {
-                    api.DeallocateState(id);
+                    api.ClearState();
                     curvilinearGrid?.Dispose();
                     meshOut?.Dispose();
+                }
+            }
+        }
+
+        [Test]
+        public void Mesh2dSnapToAnEmptyLandBoundaryThroughApi()
+        {
+            // Setup
+            using (DisposableMesh2D mesh = CreateMesh2D(10, 10, 10, 10))
+            using (var selectingPolygon = new DisposableGeometryList())
+            using (var landBoundaries = new DisposableGeometryList())
+            using (var api = new MeshKernelApi())
+            {
+                var id = 0;
+                var meshOut = new DisposableMesh2D();
+                try
+                {
+                    id = api.AllocateState(0);
+
+                    Assert.AreEqual(0, api.Mesh2dSet(id, mesh));
+
+                    api.Mesh2dSnapToLandBoundary(id, in selectingPolygon, in landBoundaries);
+
+                    // Get mesh data after conversion
+                    Assert.AreEqual(0, api.Mesh2dGetData(id, out meshOut));
+                    Assert.AreEqual(100, meshOut.NumNodes);
+                    Assert.AreEqual(0.0, meshOut.NodeX[0]);
+                    Assert.AreEqual(0.0, meshOut.NodeX[1]);
+                    Assert.AreEqual(0.0, meshOut.NodeY[0]);
+                    Assert.AreEqual(10.0, meshOut.NodeY[1]);
+                }
+                finally
+                {
+                    api.ClearState();
+                    meshOut?.Dispose();
+                }
+            }
+        }
+
+        [Test]
+        public void Mesh2dSnapToLandBoundaryThroughApi()
+        {
+            // Setup
+            using (DisposableMesh2D mesh = CreateMesh2D(10, 10, 10, 10))
+            using (var selectingPolygon = new DisposableGeometryList())
+            using (var landBoundaries = new DisposableGeometryList())
+            using (var api = new MeshKernelApi())
+            {
+                var id = 0;
+                var meshOut = new DisposableMesh2D();
+                try
+                {
+                    // prepare
+                    id = api.AllocateState(0);
+
+                    Assert.AreEqual(0, api.Mesh2dSet(id, mesh));
+
+                    selectingPolygon.XCoordinates = new[] { -10.0, 11.0, 15.0, -10.0, -10.0 };
+                    selectingPolygon.YCoordinates = new[] { -10.0, -10.0, 15.0, 15.0, -10.0 };
+                    selectingPolygon.NumberOfCoordinates = selectingPolygon.XCoordinates.Length;
+
+                    landBoundaries.XCoordinates = new[] { -1.0, 11.0 };
+                    landBoundaries.YCoordinates = new[] { -1.0, 11.0 };
+                    landBoundaries.NumberOfCoordinates = landBoundaries.XCoordinates.Length;
+
+                    // execute
+                    api.Mesh2dSnapToLandBoundary(id, in selectingPolygon, in landBoundaries);
+
+                    // assert
+                    Assert.AreEqual(0, api.Mesh2dGetData(id, out meshOut));
+                    Assert.AreEqual(100, meshOut.NumNodes);
+                    Assert.AreEqual(0.0, meshOut.NodeX[0]);
+                    Assert.AreEqual(0.0, meshOut.NodeX[1]);
+                    Assert.AreEqual(0.0, meshOut.NodeY[0]);
+                    Assert.AreEqual(10.0, meshOut.NodeY[1]);
+                }
+                finally
+                {
+                    api.ClearState();
+                    meshOut?.Dispose();
+                }
+            }
+        }
+
+
+        [Test]
+        public void Mesh2dExpungeStateThroughApi()
+        {
+            // Setup
+            using (DisposableMesh2D mesh = CreateMesh2D(10, 10, 10, 10))
+            using (var api = new MeshKernelApi())
+            {
+                var id = 0;
+                var mesh0 = new DisposableMesh2D();
+                var mesh1 = new DisposableMesh2D();
+                try
+                {
+                    // prepare
+                    id = api.AllocateState(0);
+                    Assert.AreEqual(0, api.Mesh2dSet(id, mesh));
+
+                    // execute
+                    Assert.AreEqual(0, api.Mesh2dGetData(id, out mesh0));
+                    Assert.AreEqual(0, api.ExpungeState(id));
+                    Assert.AreEqual(1, api.Mesh2dGetData(id, out mesh1)); //Once the id is expunged, no data can be retrieved and the exitcode is 1
+
+                    // assert
+                    Assert.AreEqual(100, mesh0.NumNodes);
+                    Assert.AreEqual(0, mesh1.NumNodes);
+                }
+                finally
+                {
+                    api.ClearState();
+                    mesh1?.Dispose();
                 }
             }
         }
